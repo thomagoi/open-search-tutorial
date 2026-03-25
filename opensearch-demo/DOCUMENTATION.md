@@ -302,6 +302,51 @@ OpenSearch handles all of that automatically, and is much faster at scale.
 
 ---
 
+### 3.3 Filtering Books by Genre
+
+**Endpoint:** `GET /search/books?q=darkness&genre=HORROR`
+
+The `genre` parameter is optional. When provided, it narrows results to books of that genre. Valid values match the `Genre` enum: `THRILLER`, `HORROR`, `FANTASY`, `SCI_FI`.
+
+**Why a filter, not a full-text query:**
+
+Genre is stored as a `@KeywordField` — an exact, unanalyzed value. Filtering on it is a yes/no match (not ranked), which is exactly what you want: "only show me HORROR books", not "show me books that are *kind of* horror-ish".
+
+**The query in `SearchService.java`:**
+
+```java
+searchSession.search(Book.class)
+    .where(f -> f.bool(b -> {
+        b.must(f.simpleQueryString()
+                .fields("title", "description", "author.name")
+                .matching(query)
+                .defaultOperator(BooleanOperator.AND));
+        if (genre != null) {
+            b.filter(f.match().field("genre").matching(genre));
+        }
+    }))
+    .fetchHits(size);
+```
+
+The `bool` query has two clauses:
+
+| Clause | Purpose |
+|---|---|
+| `must` | The full-text search — results must match the query text |
+| `filter` | The genre restriction — results must be this exact genre (does not affect relevance scoring) |
+
+If `genre` is omitted from the request, the filter clause is skipped and the query behaves exactly as before.
+
+**Examples:**
+
+```
+GET /search/books?q=dark             → all books matching "dark"
+GET /search/books?q=dark&genre=HORROR → only HORROR books matching "dark"
+GET /search/books?q=&genre=FANTASY   → all FANTASY books (empty text query matches everything)
+```
+
+---
+
 ## 4. Summary
 
 ```
