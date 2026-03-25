@@ -1,7 +1,9 @@
 package org.acme.resource;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
+import org.acme.view.Views;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.domain.Author;
@@ -15,12 +17,14 @@ import java.util.UUID;
 public class AuthorResource {
 
     @GET
+    @JsonView(Views.Summary.class)
     public List<Author> listAll() {
         return Author.listAll();
     }
 
     @GET
     @Path("/{id}")
+    @JsonView(Views.Detail.class)
     public Response findById(@PathParam("id") UUID id) {
         Author author = Author.findById(id);
         if (author == null) {

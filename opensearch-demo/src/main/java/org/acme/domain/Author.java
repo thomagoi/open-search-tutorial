@@ -1,6 +1,8 @@
 package org.acme.domain;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonView;
+import org.acme.view.Views;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.*;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
@@ -28,5 +30,6 @@ public class Author extends PanacheEntityBase {
     @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     @IndexedEmbedded(includePaths = {"title", "description", "genre"})
     @JsonManagedReference
+    @JsonView(Views.Detail.class)
     public List<Book> books = new ArrayList<>();
 }
